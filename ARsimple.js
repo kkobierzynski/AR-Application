@@ -1,3 +1,22 @@
+var x_1
+var y_1
+var z_1
+var x_250
+var y_250
+var z_250
+var x_255
+var y_255
+var z_255
+var x_265
+var y_265
+var z_265
+var x_1023
+var y_1023
+var z_1023
+var stage = 1;
+draw_once = true
+
+
 // Init the stats
 
 stats = new Stats();
@@ -45,9 +64,8 @@ var controls = new function(){
 	this.objectrotationH = 0.0;
 	this.objectrotationV = 0.0;
 	this.layer1 = true;
-	this.layer2 = true;
-	this.layer3 = true;
 	this.changes_in_material = false;
+	this.Pause = false;
 	
 
 	this.updateFov = function (e) {               
@@ -61,6 +79,7 @@ var controls = new function(){
 	this.updateMatFlag = function (){
 		controls.changes_in_material = true;
 	}
+
 }
 
 var light_point = new THREE.PointLight(controls.colorpointlight, 0.8);
@@ -88,8 +107,7 @@ for (var i=0; i < controls.num_markers; i++){
 
 
 var gui = new dat.GUI({autoplace:false, width:400});
-			 
-
+	
 var f2 = gui.addFolder('Focal length');
 var controlfoclength = f2.add(controls, 'foclength', 300,470);
 f2.add(controls, 'manualfoclength');
@@ -102,18 +120,23 @@ f3.add(controls, 'cualdebug',0,1023);
 var f6 = gui.addFolder('Scene control');
 f6.add(controls, 'playvideo');
 f6.addColor(controls, 'colormesh1').onChange(controls.updateMatFlag);
-f6.addColor(controls, 'colormesh2').onChange(controls.updateMatFlag);
-f6.addColor(controls, 'colormesh3').onChange(controls.updateMatFlag);
 
 var f7 = gui.addFolder('Interaction');
 f7.add(controls, 'objectrotationH', -Math.PI, Math.PI);
 f7.add(controls, 'objectrotationV', -Math.PI, Math.PI);
 f7.add(controls, 'layer1');
-f7.add(controls, 'layer2');
-f7.add(controls, 'layer3');
+f7.add(controls, 'Pause');
+
+controls.Start_animation = 
+              function() {
+				controls.Start = true;
+       };
+	   
+
+f7.add(controls,'Start_animation')
+       .name('Start');
 
 f7.open();
-
 
 
 
@@ -127,10 +150,6 @@ document.body.appendChild(videoGrabbing.domElement);
 //		create 3D objects to be rendered on the detected markers
 var markerObject3D = new THREE.Object3D();	//tutaj tworzymy obiety-grupy które następnie przypisywane są do konkretnego id
 scene.add(markerObject3D);
-var markerObject3D2 = new THREE.Object3D();
-scene.add(markerObject3D2);
-var markerObject3D3 = new THREE.Object3D();
-scene.add(markerObject3D3);
 
 // Usa una función de ejecución inmediata para asignar objeto renderizado al primer 
 // Object3D
@@ -142,18 +161,13 @@ scene.add(markerObject3D3);
 
 
 var material1 = new THREE.MeshLambertMaterial( {color: controls.colormesh1} );	//bedziemy dodawać do mesh, umożliwi kontrolowanie koloru danego obiektu
-var material2 = new THREE.MeshLambertMaterial( {color: controls.colormesh2} );
-var material3 = new THREE.MeshLambertMaterial( {color: controls.colormesh3} );
-var material4 = new THREE.MeshLambertMaterial( {color: 0xffff00} );
+const material_line = new THREE.LineBasicMaterial( { color: 0x0000ff, linewidth: 100 } );
 
 var objLayer1 = new THREE.Object3D();  //definiujemy obiekty dla obiekty-grupy
-var objLayer2 = new THREE.Object3D();  
-var objLayer3 = new THREE.Object3D();  
+
 
 
 markerObject3D.add(objLayer1);	//dodajemy do obiekty-grupy wszystkie 3 obiekty modele 3d zamek dynia buldorzer
-markerObject3D.add(objLayer2);
-markerObject3D.add(objLayer3);  // Crea la jerarquía de capas
 
 
 var loader = new THREE.STLLoader();
@@ -165,55 +179,9 @@ var loader = new THREE.STLLoader();
 	  
 		var mesh = new THREE.Mesh(geometry, material1);
 		mesh.scale.set(0.02, 0.02, 0.02);
-		mesh.rotation.set(  - Math.PI / 2, 0, 0);
+		//mesh.rotation.set(  - Math.PI / 2, 0, 0);
 		objLayer1.add(mesh);
 	} );
-	
-// Layer 2
-	//analogicznie z kolejnymi strukturami. Mając na uwadze ze połączenie materiału i struktury dodajemy do różnych obiektów
-	//tak aby te rózne obiekty móc potem dodać do obiekty-grupy
-	loader.load( 'Modelos_STL/jackolantern.stl', function ( geometry ) {
-	  
-		var mesh = new THREE.Mesh(geometry, material2);
-		mesh.scale.set(0.02, 0.02, 0.02);
-		mesh.rotation.set(  - Math.PI / 2, 0, 0);
-		objLayer2.add(mesh);
-	} );
-	
-
-// Layer 3
-	
-	loader.load( 'Modelos_STL/castle.stl', function ( geometry ) {
-	  
-		var mesh = new THREE.Mesh(geometry, material3);
-		mesh.scale.set(0.02, 0.02, 0.02);
-		mesh.rotation.set(  - Math.PI / 2, 0, 0);
-		objLayer3.add(mesh);
-	} );
-	
-
-
-
-	
-	
-// Lo mismo con el segundo objeto
-// Second 3D object is associated to marker with id = 255
-;(function(){
-		var texture = new THREE.TextureLoader().load( 'images/faces1.jpg' );
-		var material = new THREE.MeshBasicMaterial({ map: texture });
-		var geometry = new THREE.PlaneGeometry(1,1);
-		var object3d = new THREE.Mesh(geometry, material);
-		markerObject3D2.add(object3d)
-	})()
-
-// Pablo: Third 3D object is associated to marker with id = 200
-;(function(){
-		var geometry = new THREE.TorusGeometry(0.5,0.1,8,20);
-		var material = new THREE.MeshBasicMaterial({ color: 0xc77000, wireframe : false } );
-		
-		var mesh = new THREE.Mesh(geometry, material);
-		markerObject3D3.add( mesh );
-	})()
 	
 // handle window resize
 $( window ).resize(function() {
@@ -255,6 +223,7 @@ var domElement	= videoGrabbing.domElement;  // Evita invocaciones en bucle de re
 var cualfocallength = 320;
 
 renderer.compile( scene, camera );  // Precompila los shaders antes de comenzar la renderización
+debug = true;
 
 // Render loop
 function render() { 
@@ -263,7 +232,7 @@ if (controls.playvideo != controls.playvideoprev){
 	  // Starts or pauses video rendering on screen
 		if (controls.playvideo){
 		  videoGrabbing.domElement.play(); // Starts rendering
-		} else {
+		} else{
 		  videoGrabbing.domElement.pause(); // Stops rendering
 		}
 		controls.playvideoprev = controls.playvideo;
@@ -285,41 +254,208 @@ if (controls.playvideo != controls.playvideoprev){
 	}
 	
 	markerObject3D.visible = false;
-	markerObject3D2.visible = false;
-	markerObject3D3.visible = false;
 	if (controls.detectmarkers){
 		// Sólo detecta marcadores si el flag del GUI está activado
 		var markers	= jsArucoMarker.detectMarkers(domElement);  // Detecta marcadores también con el video congelado
 
-	
+		marker1 = false; 
+		marker250 = false;
+		marker255 = false;
+		marker265 = false;
+		marker1023 = false;
 		// see if this.markerId has been found
 		markers.forEach(function(marker){
-			 if ( marker.id == 265 ){
-				 jsArucoMarker.markerToObject3D(marker, markerObject3D, cualfocallength);
-				 markerObject3D.visible = true;
-				 markerObject3D.rotation.set(controls.objectrotationV, controls.objectrotationH, 0);  // Rota el objeto al completo
-				 objLayer1.visible = controls.layer1;
-				 objLayer2.visible = controls.layer2;
-				 objLayer3.visible = controls.layer3;  // Control de visibilidad de capas
-				 if (controls.changes_in_material){
-				   material1.color = new THREE.Color(controls.colormesh1);
-					 material1.needsUpdate = true;
-					 material2.color = new THREE.Color(controls.colormesh2);
-					 material2.needsUpdate = true;
-					 material3.color = new THREE.Color(controls.colormesh3);
-					 material3.needsUpdate = true;
+			if(marker.id == 1 && marker1 == false){
+				marker1 = true;
+				//starting_marker = marker;
+				jsArucoMarker.markerToObject3D(marker, markerObject3D, cualfocallength);
+				x_1 = markerObject3D.position.x;
+				y_1 = markerObject3D.position.y;
+				z_1 = markerObject3D.position.z;
+				//console.log("1 x ->"+x_250)
+			}else if(marker.id == 250 && marker250 == false){
+				marker250 = true;
+				jsArucoMarker.markerToObject3D(marker, markerObject3D, cualfocallength);
+				x_250 = markerObject3D.position.x;
+				y_250 = markerObject3D.position.y;
+				z_250 = markerObject3D.position.z;
+			}else if(marker.id == 255 && marker255 == false){
+				marker255 = true;
+				jsArucoMarker.markerToObject3D(marker, markerObject3D, cualfocallength);
+				x_255 = markerObject3D.position.x;
+				y_255 = markerObject3D.position.y;
+				z_255 = markerObject3D.position.z;
+			}else if(marker.id == 265 && marker265 == false){
+				marker265 = true;
+				jsArucoMarker.markerToObject3D(marker, markerObject3D, cualfocallength);
+				x_265 = markerObject3D.position.x;
+				y_265 = markerObject3D.position.y;
+				z_265 = markerObject3D.position.z;
+			}else if(marker.id == 1023 && marker1023 == false){
+				marker1023 = true;
+				jsArucoMarker.markerToObject3D(marker, markerObject3D, cualfocallength);
+				x_1023 = markerObject3D.position.x;
+				y_1023 = markerObject3D.position.y;
+				z_1023 = markerObject3D.position.z;
+			}
+			 if ( marker1 && marker250 && marker255 && marker265 && marker1023){
+				videoGrabbing.domElement.pause();
+				if(draw_once){
+					draw_once=false;
+					const points = [];
+					points.push( new THREE.Vector3(x_1, y_1, z_1 ) );
+					points.push( new THREE.Vector3( x_250, y_250, z_250 ) );
+					points.push( new THREE.Vector3( x_255, y_255, z_255 ) );
+					points.push( new THREE.Vector3( x_265, y_265, z_265 ) );
+					points.push( new THREE.Vector3( x_1023, y_1023, z_1023 ) );
+					const geometry = new THREE.BufferGeometry().setFromPoints( points );
+					const line = new THREE.Line( geometry, material_line );
+					scene.add( line );
+					movement_1_250_x = (x_1-x_250)/1000;
+					movement_1_250_y = (y_1-y_250)/1000;
+					movement_1_250_z = (z_1-z_250)/1000;
+
+					movement_250_255_x = (x_250-x_255)/1000;
+					movement_250_255_y = (y_250-y_255)/1000;
+					movement_250_255_z = (z_250-z_255)/1000;
+
+					movement_255_265_x = (x_255-x_265)/1000;
+					movement_255_265_y = (y_255-y_265)/1000;
+					movement_255_265_z = (z_255-z_265)/1000;
+
+					movement_265_1023_x = (x_265-x_1023)/1000;
+					movement_265_1023_y = (y_265-y_1023)/1000;
+					movement_265_1023_z = (z_265-z_1023)/1000;
+
+					newx=x_1;
+					newy=y_1;
+					newz=z_1;
+
+					var plane = new THREE.Plane();
+					plane.setFromCoplanarPoints(new THREE.Vector3(x_250,y_250,z_250), new THREE.Vector3(x_1023,y_1023,z_1023), new THREE.Vector3(x_265,y_265,z_265));
+					normal = plane.normal;
+					//markerObject3D.rotation.set(normal.x, normal.y, normal.z);  // Rota el objeto al completo
+
+					delta_250_255_x = x_250-x_255;
+					delta_250_255_y = y_250-y_255;
+
+					delta_255_265_x = x_255-x_265;
+					delta_255_265_y = y_255-y_265;
+
+					delta_265_1023_x = x_265-x_1023;
+					delta_265_1023_y = y_265-y_1023;
+
+					tan = (x_1-x_250)/(y_1-y_250);
+					angle = Math.atan(tan);
+					if(y_1>y_250){
+						angle = (Math.PI/2)-angle;
+					}
+					if(y_1<y_250){
+						angle = -(Math.PI/2)-angle;
+					}
+					
+				}
+				//console.log(57.32*angle);
+				//console.log("X_1->"+x_1);
+				//console.log(Math.PI);
+				if(Math.abs(x_250-newx)<1 && stage == 1){
+					stage = 2;
+					tan = delta_250_255_x/delta_250_255_y;
+					angle = Math.atan(tan);
+					if(y_250>y_255){
+						angle = (Math.PI/2)-angle;
+					}
+					if(y_250<y_255){
+						angle = -(Math.PI/2)-angle;
+					}
+				}
+				if(Math.abs(x_255-newx)<1 && stage == 2){
+					stage = 3;
+					tan = delta_255_265_x/delta_255_265_y;
+					angle = Math.atan(tan);
+					if(y_255>y_265){
+						angle = (Math.PI/2)-angle;
+					}
+					if(y_255<y_265){
+						angle = -(Math.PI/2)-angle;
+					}
+				}
+				if(Math.abs(x_265-newx)<1 && stage == 3){
+					stage = 4;
+					tan = delta_265_1023_x/delta_265_1023_y;
+					angle = Math.atan(tan);
+					if(y_265>y_1023){
+						angle = (Math.PI/2)-angle;
+					}
+					if(y_265<y_1023){
+						angle = -(Math.PI/2)-angle;
+					}
+				}
+				if(Math.abs(x_1023-newx)<1 && stage == 4){
+					stage = 5;
+				}
+				var Pause = controls.Pause;
+				var Start = false
+				var Start = controls.Start;
+				 //jsArucoMarker.markerToObject3D(marker, markerObject3D, cualfocallength);
+				 if(stage == 1){
+					 console.log("W ifie"+Start);
+					if(Pause ==false && Start){
+						newx = newx-movement_1_250_x;
+						newy = newy-movement_1_250_y;
+						newz = newz-movement_1_250_z;
+						console.log("MATH ABS->"+Math.abs(x_250-newx));
+					}
+
+					
+				 }if(stage == 2){
+					first = false
+					if(Pause ==false){
+						newx = newx-movement_250_255_x;
+						newy = newy-movement_250_255_y;
+						newz = newz-movement_250_255_z;
+					}
+
 				 }
-				 
-			 } else if ( marker.id == 255 ){
-				 jsArucoMarker.markerToObject3D(marker, markerObject3D2, cualfocallength);
-				 markerObject3D2.visible = true;
-				 markerObject3D2.rotation.set(0, 0, 0);
-			} else if ( marker.id == 250 ){
-				 jsArucoMarker.markerToObject3D(marker, markerObject3D3, cualfocallength);
-				 markerObject3D3.visible = true;				 	 
-			 } else {
-				 return
-			 }			
+				if(stage == 3){
+					first = false
+					if(Pause ==false){
+						newx = newx-movement_255_265_x;
+						newy = newy-movement_255_265_y;
+						newz = newz-movement_255_265_z;
+					}
+
+				 }
+				if(stage == 4){
+					first = false
+					if(Pause ==false){
+						newx = newx-movement_265_1023_x;
+						newy = newy-movement_265_1023_y;
+						newz = newz-movement_265_1023_z;
+					}
+	
+				 }
+				if(stage == 5){
+					first = false
+					newx = x_1023;
+					newy = y_1023;
+					newz = z_1023;
+					
+				 }
+				 markerObject3D.rotation.z = angle;
+				 markerObject3D.position.set(newx,newy,newz);
+				 //console.log("1 x inside->"+x_250)
+				 markerObject3D.visible = true;
+				 //markerObject3D.rotation.set(controls.objectrotationV, controls.objectrotationH, 90);  // Rota el objeto al completo
+				 console.log(controls.Start);
+				 objLayer1.visible = controls.layer1;
+				 debug = false;
+				 if (controls.changes_in_material){
+				    material1.color = new THREE.Color(controls.colormesh1);
+					material1.needsUpdate = true;
+				 }
+			 } else
+			 return		
 		})
 	}
 

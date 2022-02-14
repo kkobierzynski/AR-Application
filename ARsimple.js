@@ -158,7 +158,7 @@ scene.add(markerObject3D);
 // El punto y coma es programación defensiva, para proteger la función de errores de sintaxis
 
 // First 3D object is associated to marker with id = 265
-//testas
+//testastests
 
 var material1 = new THREE.MeshLambertMaterial( {color: controls.colormesh1} );	//bedziemy dodawać do mesh, umożliwi kontrolowanie koloru danego obiektu
 const material_line = new THREE.LineBasicMaterial( { color: 0x0000ff, linewidth: 100 } );
